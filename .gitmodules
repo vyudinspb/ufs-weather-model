@@ -1,14 +1,7 @@
 [submodule "FV3"]
   path = FV3
-  url = https://github.com/KevinViner-NOAA/fv3atm
-  branch = wamhr4_grav
-#  branch = wamhr3
-#  branch = wam2c
-#  branch = wamlocaldev
-#  url = https://github.com/KevinViner-NOAA/fv3atm
-#  branch = wam2_dev
-#  url = https://github.com/NOAA-EMC/fv3atm
-#   branch = develop
+  url = https://github.com/SvetlanaKarol-NOAA/fv3atm
+  branch = ufs-wamv1
 [submodule "WW3"]
   path = WW3
   url = https://github.com/NOAA-EMC/WW3

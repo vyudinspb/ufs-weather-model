@@ -10,21 +10,30 @@ export CNTL_DIR=control_fv3wam_p8
 
 export LIST_FILES="sfcf024.nc \
                    atmf024.nc"
+export RTPWD=/scratch2/NAGAPE/epic/UFS-WM_RT/NEMSfv3gfs/develop-20250429
+export INPUTDATA_ROOT=/scratch1/NCEPDEV/swpc/Svetlana.Karol/FV3WAM_V2_INPUT 
+export NEW_BASELINE=/scratch1/NCEPDEV/stmp4/Svetlana.Karol/FV3_RT/REGRESSION_TEST
+export CREATE_BASELINE=false
 
 export_fv3
 export_tiled
-export NPZ=149
-export NPZP=150
+export TASKS=600
+export WRTTASK_PER_GROUP=24
+export INPES=6
+export JNPES=16
+export NPZ=196
+export NPZP=197
 export DT_ATMOS=180
 export DT_INNER=${DT_ATMOS}
 export SYEAR=2018
-export SMONTH=2
+export SMONTH=1
 export SDAY=1
 export SHOUR=0
 export FHMAX=24
 export OUTPUT_GRID='gaussian_grid'
 export FHROT=0
 export WLCLK=30
+
 export OUTPUT_FH='1 -1'
 
 export IALB=2
@@ -57,6 +66,8 @@ export D_CON=0.0
 export MAKE_NH=.false.
 export TRANS_TRAC=.false.
 export FHZERO=1.0
+export VAR_GRAV=.true.
+
 
 #  Merra2 Aerosols & NSST
 export USE_MERRA2=.true.
@@ -67,7 +78,7 @@ export LHEATSTRG=.false.
 export LSEASPRAY=.true.
 
 # UGWP1
-export CDMBWD=20.0,2.5,1.0,1.0
+export CDMBWD=0.14,1.8,1.0,0.0
 export DO_TOFD=.false.
 export GWD_OPT=2
 export DO_UGWP_V0=.false.
@@ -80,7 +91,7 @@ export DO_GWD_OPT_PSL=.true.
 export LDIAG_UGWP=.false.
 export KNOB_UGWP_DOKDIS=2
 export KNOB_UGWP_NDX4LH=4
-export KNOB_UGWP_NSLOPE=1
+export KNOB_UGWP_NSLOPE=2
 export KNOB_UGWP_VERSION=1
 
 # CA

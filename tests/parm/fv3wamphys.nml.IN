@@ -94,6 +94,7 @@
     agrid_vel_rst = .true.
     read_increment = @[READ_INCREMENT]
     res_latlon_dynamics = "fv3_increment.nc"
+    var_grav = @[VAR_GRAV]
 /
 
 &external_ic_nml
@@ -258,13 +259,16 @@
   ! These are only for UGWP v1
 @[HIDE_UGWPV1] knob_ugwp_palaunch = 275.0e2
 @[HIDE_UGWPV1] knob_ugwp_nslope   = @[KNOB_UGWP_NSLOPE]
-@[HIDE_UGWPV1] knob_ugwp_lzmax    = 15.750e3
+@[HIDE_UGWPV1] knob_ugwp_lzmax    = 20.0e3
 @[HIDE_UGWPV1] knob_ugwp_lzmin    = 0.75e3
 @[HIDE_UGWPV1] knob_ugwp_lzstar   = 2.0e3
 @[HIDE_UGWPV1] knob_ugwp_taumin   = 0.25e-3
 @[HIDE_UGWPV1] knob_ugwp_tauamp   = 3.0e-3
 @[HIDE_UGWPV1] knob_ugwp_lhmet    = 200.0e3
+@[HIDE_UGWPV1] knob_ugwp_sponge   = 180.e3
 @[HIDE_UGWPV1] knob_ugwp_orosolv  = 'pss-1986'
+@[HIDE_UGWPV1] knob_ugwp_merra    = 0.75
+@[HIDE_UGWPV1] knob_ugwp_rain     = -1
 /
 
 &gfdl_cloud_microphysics_nml
