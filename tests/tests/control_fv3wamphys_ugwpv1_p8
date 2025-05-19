@@ -117,7 +117,7 @@ export FSICS=0
 
 export IMP_PHYSICS=8
 export DZ_MIN=6
-export levr=133
+export LEVR=133
 
 #required for NML.IN sharing
 export MIN_SEAICE=0.15
