@@ -17,12 +17,13 @@ cleanup() {
 
 write_fail_test() {
   echo "${TEST_ID} failed in run_test" >> "${PATHRT}/fail_test_${TEST_ID}"
-  exit 1
+ exit 1
 }
 
 remove_fail_test() {
     echo "Removing test failure flag file for ${TEST_ID}"
     rm -f "${PATHRT}/fail_test_${TEST_ID}"
+ 
 }
 
 if [[ $# != 5 ]]; then
@@ -53,7 +54,7 @@ source default_vars.sh
 [[ -e ${RUNDIR_ROOT}/run_test_${TEST_ID}.env ]] && source "${RUNDIR_ROOT}/run_test_${TEST_ID}.env"
 source "tests/${TEST_NAME}"
 
-remove_fail_test
+rm -f "${PATHRT}/fail_test_${TEST_ID}"
 
 # Save original CNTL_DIR name as INPUT_DIR for regression
 # tests that try to copy input data from CNTL_DIR
@@ -100,8 +101,12 @@ cp "${PATHRT}/module-setup.sh" "module-setup.sh"
 
 case ${MACHINE_ID} in
   wcoss2|acorn)
-    module load intel/19.1.3.304 netcdf/4.7.4
-    module load nccmp
+    module load intel/19.1.3.304
+    module load craype/2.7.13 cray-mpich/8.1.12
+    module load netcdf-D/4.9.2
+    module load pnetcdf-D/1.12.2
+    module load hdf5-D/1.14.0
+    module load nccmp-D/1.9.0.1
     ;;
   s4)
     module use /data/prod/jedi/spack-stack/spack-stack-1.4.1/envs/ufs-pio-2.5.10/install/modulefiles/Core
@@ -109,13 +114,21 @@ case ${MACHINE_ID} in
     module load miniconda/3.9.12
     module load nccmp/1.9.0.1
     ;;
-  stampede|expanse|noaacloud)
+  noaacloud|frontera)
     echo "No special nccmp load necessary"
     ;;
-  gaea)
-    module use modulefiles
-    module load modules.fv3
-    module load gcc/12.2.0
+  gaeac5)
+    module use /ncrc/proj/epic/spack-stack/spack-stack-1.6.0/envs/unified-env/install/modulefiles/Core
+    module load stack-intel/2023.2.0 stack-cray-mpich/8.1.28
+    module load nccmp/1.9.0.1
+    ;;
+  gaeac6)
+    module use /ncrc/proj/epic/spack-stack/c6/spack-stack-1.6.0/envs/fms-2024.01/install/modulefiles/Core
+    module load stack-intel/2023.2.0 stack-cray-mpich/8.1.29
+    module load nccmp/1.9.0.1
+    #module use modulefiles
+    #module load modules.fv3
+    #module load gcc-native/12.3
     ;;
   derecho)
     module load nccmp
@@ -146,6 +159,10 @@ else
   export HIDE_UGWPV1='!'
 fi
 
+# Set IAU Global workflow related tags to ' '
+export HIDE_AIAU=' '
+export HIDE_LIAU=' '
+
 if [[ ${DATM_CDEPS} = 'true' ]] || [[ ${FV3} = 'true' ]] || [[ ${S2S} = 'true' ]]; then
   if [[ ${HAFS} = 'false' ]] || [[ ${FV3} = 'true' && ${HAFS} = 'true' ]]; then
     atparse < "${PATHRT}/parm/${INPUT_NML:-input.nml.IN}" > input.nml
@@ -159,10 +176,17 @@ else
   exit 1
 fi
 
+
 compute_petbounds_and_tasks
 
+
 if [[ -f ${PATHRT}/parm/${UFS_CONFIGURE} ]]; then
-  atparse < "${PATHRT}/parm/${UFS_CONFIGURE}" > ufs.configure
+#  (
+    atparse < "${PATHRT}/parm/${UFS_CONFIGURE}" > ufs.configure
+#    if [[ ${ESMF_THREADING} != true ]]; then
+#       sed -i -e "/_omp_num_threads:/d" ufs.configure
+#    fi
+#  )
 else
   echo "Cannot find file ${UFS_CONFIGURE} set by variable UFS_CONFIGURE"
   exit 1
@@ -249,12 +273,13 @@ fi
 #fi
 
 # NoahMP table file
+
   cp "${PATHRT}/parm/noahmptable.tbl" .
 
 
 # AQM
 if [[ ${AQM} == .true. ]]; then
-  cp "${PATHRT}/parm/aqm/aqm.rc" .
+  cp "${PATHRT}/parm/aqm/${aqm_rc_file}" ./aqm.rc
 fi
 
 # Field Dictionary
@@ -264,18 +289,19 @@ cp "${PATHRT}/parm/fd_ufs.yaml" fd_ufs.yaml
 source ./fv3_run
 
 if [[ ${CPLWAV} == .true. ]]; then
-  if [[ ${WW3_MULTIGRID} = 'true' ]]; then
-    atparse < "${PATHRT}/parm/ww3_multi.inp.IN" > ww3_multi.inp
-  else
     atparse < "${PATHRT}/parm/ww3_shel.nml.IN" > ww3_shel.nml
     cp "${PATHRT}/parm/ww3_points.list" .
-  fi
 fi
 
 if [[ ${CPLCHM} == .true. ]]; then
-  cp "${PATHRT}"/parm/gocart/*.rc .
-  atparse < "${PATHRT}/parm/gocart/AERO_HISTORY.rc.IN" > AERO_HISTORY.rc
-fi
+## if [[ ${BMIC} == .true. ]]; then
+##    cp "${PATHRT}"/parm/gocart/gefs/*.rc .
+##   atparse < "${PATHRT}/parm/gocart/gefs/AERO_HISTORY.rc.IN" > AERO_HISTORY.rc
+##else
+    cp "${PATHRT}"/parm/gocart/*.rc .
+    atparse < "${PATHRT}/parm/gocart/AERO_HISTORY.rc.IN" > AERO_HISTORY.rc
+  fi
+#fi
 
 #TODO: this logic needs to be cleaned up for datm applications w/o
 #ocean or ice
@@ -298,6 +324,11 @@ if [[ "${DIAG_TABLE_ADDITIONAL:-}Q" != Q ]]; then
   atparse < "${PATHRT}/parm/diag_table/${DIAG_TABLE_ADDITIONAL:-}" >> diag_table
 fi
 
+#if [[ "${FIELD_TABLE_ADDITIONAL:-}Q" != Q ]] ; then
+#    # Append field table
+#    atparse < "${PATHRT}/parm/field_table/${FIELD_TABLE_ADDITIONAL:-}" >> field_table
+#fi
+
 # ATMAERO
 if [[ ${CPLCHM} == .true. ]] && [[ ${S2S} = 'false' ]]; then
   atparse < "${PATHRT}/parm/diag_table/${DIAG_TABLE:-diag_table_template}" > diag_table
@@ -305,17 +336,17 @@ fi
 
 if [[ ${DATM_CDEPS} = 'true' ]]; then
   atparse < "${PATHRT}/parm/${DATM_IN_CONFIGURE:-datm_in.IN}" > datm_in
-  atparse < "${PATHRT}/parm/${DATM_STREAM_CONFIGURE:-datm.streams.IN}" > datm.streams
+#  atparse < "${PATHRT}/parm/${DATM_STREAM_CONFIGURE:-datm.streams.IN}" > datm.streams
 fi
 
 if [[ ${DOCN_CDEPS} = 'true' ]]; then
   atparse < "${PATHRT}/parm/${DOCN_IN_CONFIGURE:-docn_in.IN}" > docn_in
-  atparse < "${PATHRT}/parm/${DOCN_STREAM_CONFIGURE:-docn.streams.IN}" > docn.streams
+ # atparse < "${PATHRT}/parm/${DOCN_STREAM_CONFIGURE:-docn.streams.IN}" > docn.streams
 fi
 
 if [[ ${DICE_CDEPS} = 'true' ]]; then
   atparse < "${PATHRT}/parm/${DICE_IN_CONFIGURE:-dice_in.IN}" > dice_in
-  atparse < "${PATHRT}/parm/${DICE_STREAM_CONFIGURE:-dice.streams.IN}" > dice.streams
+#  atparse < "${PATHRT}/parm/${DICE_STREAM_CONFIGURE:-dice.streams.IN}" > dice.streams
 fi
 
 if [[ ${CICE_PRESCRIBED} = 'true' ]]; then
@@ -325,6 +356,26 @@ fi
 if [[ ${CDEPS_INLINE} = 'true' ]]; then
   atparse < "${PATHRT}/parm/${CDEPS_INLINE_CONFIGURE:-stream.config.IN}" > stream.config
 fi
+
+#if [[ ${FIRE_BEHAVIOR} = 'true' ]]; then
+#  atparse < "${PATHRT}/parm/${FIRE_NML:-namelist.fire.IN}" > namelist.fire
+#fi
+
+#Namelists generated and variable definitions are finalized
+#Sanity check for timesteps on ATM/OCN/ICE
+#if [[ -n "${DT_CICE+x}" ]]; then
+##  if [[ ${DT_ATMOS} -ne ${DT_CICE} ]]; then
+#    echo "Atmosphere timestep (DT_ATMOS) should be equal to CICE timestep (DT_CICE). Exiting"
+ #   exit 1
+#  fi
+#fi
+#if [[ -n "${coupling_interval_slow_sec+x}" && -n "${coupling_interval_fast_sec+x}" ]]; then
+ # if [[ $(( coupling_interval_slow_sec % coupling_interval_fast_sec)) -ne 0 ]]; then
+ #   echo "The slow coupling timestep (coupling_interval_slow_sec) should be divisible by"
+#    echo "the fast coupling timestep (coupling_interval_fast_sec). Exiting"
+#    exit 1
+#  fi
+#fi
 
 TPN=$(( TPN / THRD ))
 if (( TASKS < TPN )); then
@@ -348,6 +399,10 @@ if (( UFS_TASKS - ( PPN * NODES ) > 0 )); then
 fi
 export PPN
 export UFS_TASKS
+
+#if [[ ${ESMF_THREADING} != true ]]; then
+#  PPN=${TPN}
+#fi
 
 if [[ ${SCHEDULER} = 'pbs' ]]; then
   if [[ -e ${PATHRT}/fv3_conf/fv3_qsub.IN_${MACHINE_ID} ]]; then
@@ -397,8 +452,10 @@ else
 fi
 skip_check_results=${skip_check_results:-false}
 results_okay=YES
-if [[ ${skip_check_results} = false ]]; then
-  if ( ! check_results ) ; then
+
+if [[ ${skip_check_results} == false ]]; then
+ test_status='PASS'
+ if ( ! check_results ) ; then
     results_okay=NO
   fi
 else
@@ -415,10 +472,10 @@ fi
 if [[ ${SCHEDULER} != 'none' ]]; then
   cat "${RUNDIR}/job_timestamp.txt" >> "${LOG_DIR}/${JBNME}_timestamp.txt"
 fi
-
 if [[ ${results_okay} == YES ]]; then
   remove_fail_test
 fi
+
 
 ################################################################################
 # End test

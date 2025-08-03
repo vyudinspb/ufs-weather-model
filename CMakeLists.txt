@@ -136,8 +136,11 @@ else()
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Set type of build to Release." FORCE)
 endif()
 
-include(cmake/${CMAKE_Fortran_COMPILER_ID}.cmake)
-
+#####include(cmake/${CMAKE_Fortran_COMPILER_ID}.cmake)
+# Detect and set UFS_COMPILER_SUITE in detect_compiler_suite.cmake
+set(UFS_COMPILER_SUITE)
+include(cmake/detect_compiler_suite.cmake)
+include(cmake/${UFS_COMPILER_SUITE}.cmake)
 ###############################################################################
 ### Find Dependencies
 ###############################################################################
@@ -147,7 +150,7 @@ if(OPENMP)
 endif()
 
 find_package(NetCDF 4.7.4 REQUIRED C Fortran)
-find_package(ESMF 8.3.0 MODULE REQUIRED)
+find_package(ESMF 8.8.0 MODULE REQUIRED)
 if(FMS)
   find_package(FMS 2022.04 REQUIRED COMPONENTS R4 R8)
   if(APP MATCHES "^(HAFSW)$")
