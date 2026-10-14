@@ -1,0 +1,5 @@
+module purge
+  module use modulefiles
+   module load ufs_hera.intel
+setenv CMAKE_FLAGS "-DAPP=ATM -DCCPP_SUITES=FV3_GFS_v17_wam_ugwpv1 -D32BIT=ON -DMULTI_GASES=ON -DMPI=ON -DCMAKE_BUILD_TYPE=Release"
+ ./build.sh
